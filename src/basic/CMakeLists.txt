@@ -1,2 +1,3 @@
-cppcon_add_library(basic SOURCES state_base.cpp)
+cppcon_add_library(basic SOURCES allocate_state.cpp
+                                 state_base.cpp)
 add_subdirectory(tests)
