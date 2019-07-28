@@ -1,12 +1,12 @@
 #pragma once
 
 #include <cassert>
-#include <experimental/executor>
 #include <memory>
 #include <optional>
 #include <system_error>
 #include <type_traits>
 #include <utility>
+#include <boost/asio/ts/executor.hpp>
 
 namespace cppcon {
 namespace basic {
@@ -19,10 +19,10 @@ class state_base {
   std::optional<std::error_code> ec_;
 public:
   using completion_handler_type = CompletionHandler;
-  using executor_type = std::experimental::net::associated_executor_t<CompletionHandler,
-                                                                      Executor>;
-  using allocator_type = std::experimental::net::associated_allocator_t<CompletionHandler,
-                                                                        std::allocator<void>>;
+  using executor_type = boost::asio::associated_executor_t<CompletionHandler,
+                                                           Executor>;
+  using allocator_type = boost::asio::associated_allocator_t<CompletionHandler,
+                                                             std::allocator<void>>;
   state_base() = delete;
   state_base(const state_base&) = delete;
   state_base& operator=(const state_base&) = delete;
@@ -32,12 +32,12 @@ public:
       handler_(std::move(handler))
   {}
   auto get_executor() const noexcept {
-    return std::experimental::net::get_associated_executor(handler_,
-                                                           ex_);
+    return boost::asio::get_associated_executor(handler_,
+                                                ex_);
   }
   auto get_allocator() const noexcept {
-    return std::experimental::net::get_associated_allocator(handler_,
-                                                            std::allocator<void>());
+    return boost::asio::get_associated_allocator(handler_,
+                                                 std::allocator<void>());
   }
   template<typename Derived>
   bool complete(const std::shared_ptr<Derived>& p,

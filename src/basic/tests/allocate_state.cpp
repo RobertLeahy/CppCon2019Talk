@@ -1,6 +1,6 @@
 #include <cppcon/basic/allocate_state.hpp>
 
-#include <experimental/io_context>
+#include <boost/asio/ts/io_context.hpp>
 #include <cppcon/basic/state_base.hpp>
 #include <cppcon/test/allocator.hpp>
 
@@ -27,10 +27,10 @@ private:
 TEST_CASE("allocate_state",
           "[allocate_state]")
 {
-  std::experimental::net::io_context ioc;
+  boost::asio::io_context ioc;
   test::allocator_state state;
   completion_handler h(state);
-  using state_type = state_base<std::experimental::net::io_context::executor_type,
+  using state_type = state_base<boost::asio::io_context::executor_type,
                                 completion_handler>;
   auto ptr = allocate_state<state_type>(ioc.get_executor(),
                                         h);

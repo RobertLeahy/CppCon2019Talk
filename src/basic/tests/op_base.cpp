@@ -1,13 +1,13 @@
 #include <cppcon/basic/op_base.hpp>
 
 #include <cassert>
-#include <experimental/io_context>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <system_error>
 #include <utility>
+#include <boost/asio/ts/io_context.hpp>
 #include <cppcon/basic/allocate_state.hpp>
 #include <cppcon/basic/state_base.hpp>
 
@@ -42,15 +42,15 @@ private:
   std::optional<arguments_type> args_;
 };
 
-class state : public state_base<std::experimental::net::io_context::executor_type,
+class state : public state_base<boost::asio::io_context::executor_type,
                                 std::reference_wrapper<completion_handler>>
 {
 private:
-  using base = state_base<std::experimental::net::io_context::executor_type,
+  using base = state_base<boost::asio::io_context::executor_type,
                           std::reference_wrapper<completion_handler>>;
 public:
   state(std::reference_wrapper<completion_handler> h,
-        std::experimental::net::io_context& ioc)
+        boost::asio::io_context& ioc)
     : base(ioc.get_executor(),
            std::move(h))
   {}
@@ -60,7 +60,7 @@ TEST_CASE("get_allocator & get_executor",
           "[op_base]")
 {
   completion_handler h;
-  std::experimental::net::io_context ioc;
+  boost::asio::io_context ioc;
   auto ptr = allocate_state<state>(std::ref(h),
                                    ioc);
   REQUIRE(ptr);
@@ -76,7 +76,7 @@ TEST_CASE("complete, reset, & upcall",
           "[op_base]")
 {
   completion_handler h;
-  std::experimental::net::io_context ioc;
+  boost::asio::io_context ioc;
   auto ptr = allocate_state<state>(std::ref(h),
                                    ioc);
   REQUIRE(ptr);

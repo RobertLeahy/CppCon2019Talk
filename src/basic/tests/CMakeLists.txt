@@ -3,6 +3,9 @@ cppcon_add_test(basic
                         main.cpp
                         op_base.cpp
                         state_base.cpp
-                LIBRARIES Catch2::Catch2)
+                LIBRARIES Boost::boost
+                          Boost::system
+                          Catch2::Catch2
+                          Threads::Threads)
 target_link_libraries(basic_tests
                       testing)
