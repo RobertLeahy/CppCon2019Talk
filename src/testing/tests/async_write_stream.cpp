@@ -2,9 +2,9 @@
 
 #include <cstddef>
 #include <cstring>
-#include <system_error>
 #include <boost/asio/ts/buffer.hpp>
 #include <boost/asio/ts/io_context.hpp>
+#include <boost/system/error_code.hpp>
 
 #include <catch2/catch.hpp>
 
@@ -18,7 +18,7 @@ TEST_CASE("async_write_some EOF",
 {
   const char buffer[] = {0, 1, 2};
   bool invoked = false;
-  std::error_code ec;
+  boost::system::error_code ec;
   std::size_t bytes_transferred = 0;
   boost::asio::io_context ctx;
   async_write_stream stream(ctx.get_executor());
@@ -58,7 +58,7 @@ TEST_CASE("async_write_some copy some",
               0,
               sizeof(out));
   bool invoked = false;
-  std::error_code ec;
+  boost::system::error_code ec;
   std::size_t bytes_transferred = 0;
   boost::asio::io_context ctx;
   async_write_stream stream(ctx.get_executor(),
@@ -102,7 +102,7 @@ TEST_CASE("async_write_some copy all",
               0,
               sizeof(out));
   bool invoked = false;
-  std::error_code ec;
+  boost::system::error_code ec;
   std::size_t bytes_transferred = 0;
   boost::asio::io_context ctx;
   async_write_stream stream(ctx.get_executor(),
@@ -147,7 +147,7 @@ TEST_CASE("async_write_some error",
               0,
               sizeof(out));
   bool invoked = false;
-  std::error_code ec;
+  boost::system::error_code ec;
   std::size_t bytes_transferred = 0;
   boost::asio::io_context ctx;
   async_write_stream stream(ctx.get_executor(),
@@ -167,7 +167,7 @@ TEST_CASE("async_write_some error",
   REQUIRE(stream.pending());
   auto handlers = ctx.poll();
   CHECK_FALSE(handlers);
-  stream.complete(make_error_code(std::errc::invalid_argument));
+  stream.complete(make_error_code(boost::system::errc::invalid_argument));
   CHECK_FALSE(stream.pending());
   CHECK_FALSE(invoked);
   handlers = ctx.poll();
@@ -175,7 +175,7 @@ TEST_CASE("async_write_some error",
   CHECK(ctx.stopped());
   CHECK(invoked);
   CHECK(ec);
-  CHECK(ec == make_error_code(std::errc::invalid_argument));
+  CHECK(ec == make_error_code(boost::system::errc::invalid_argument));
   CHECK_FALSE(bytes_transferred);
   CHECK_FALSE(stream.empty());
   CHECK(stream.remaining() == sizeof(out));
@@ -190,7 +190,7 @@ TEST_CASE("async_write_some cancel",
               0,
               sizeof(out));
   bool invoked = false;
-  std::error_code ec;
+  boost::system::error_code ec;
   std::size_t bytes_transferred = 0;
   boost::asio::io_context ctx;
   async_write_stream stream(ctx.get_executor(),
@@ -218,7 +218,7 @@ TEST_CASE("async_write_some cancel",
   CHECK(ctx.stopped());
   CHECK(invoked);
   CHECK(ec);
-  CHECK(ec == make_error_code(std::errc::operation_canceled));
+  CHECK(ec == make_error_code(boost::system::errc::operation_canceled));
   CHECK_FALSE(bytes_transferred);
   CHECK_FALSE(stream.empty());
   CHECK(stream.remaining() == sizeof(out));
@@ -233,7 +233,7 @@ TEST_CASE("async_write_some cancel none",
               0,
               sizeof(out));
   bool invoked = false;
-  std::error_code ec;
+  boost::system::error_code ec;
   std::size_t bytes_transferred = 0;
   boost::asio::io_context ctx;
   async_write_stream stream(ctx.get_executor(),

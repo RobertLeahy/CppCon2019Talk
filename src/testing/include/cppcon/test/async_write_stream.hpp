@@ -6,11 +6,11 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
-#include <system_error>
 #include <type_traits>
 #include <utility>
 #include <boost/asio/ts/buffer.hpp>
 #include <boost/asio/ts/executor.hpp>
+#include <boost/system/error_code.hpp>
 #include "pending_service.hpp"
 
 namespace cppcon {
@@ -19,7 +19,7 @@ namespace test {
 template<typename Executor>
 class async_write_stream {
 private:
-  using signature_type = void(std::error_code,
+  using signature_type = void(boost::system::error_code,
                               std::size_t);
   using service_type = pending_service<signature_type>;
 public:
@@ -63,7 +63,7 @@ public:
                  g = boost::asio::make_work_guard(get_executor()),
                  g2 = boost::asio::make_work_guard(ex),
                  handler = std::move(completion.completion_handler),
-                 cb](std::error_code ec,
+                 cb](boost::system::error_code ec,
                      std::size_t bytes_transferred) mutable
                 {
                   bytes_transferred = boost::asio::buffer_copy(boost::asio::buffer(out_,
@@ -100,7 +100,7 @@ public:
   bool empty() const noexcept {
     return !remaining();
   }
-  void complete(std::error_code ec,
+  void complete(boost::system::error_code ec,
                 std::size_t bytes_transferred)
   {
     assert(pending());
@@ -108,20 +108,20 @@ public:
                 bytes_transferred);
   }
   void complete() {
-    complete(std::error_code(),
+    complete(boost::system::error_code(),
              std::numeric_limits<std::size_t>::max());
   }
-  void complete(std::error_code ec) {
+  void complete(boost::system::error_code ec) {
     complete(ec,
              0);
   }
   void complete(std::size_t bytes_transferred) {
-    complete(std::error_code(),
+    complete(boost::system::error_code(),
              bytes_transferred);
   }
   void cancel() {
     if (pending()) {
-      complete(make_error_code(std::errc::operation_canceled));
+      complete(make_error_code(boost::system::errc::operation_canceled));
     }
   }
 private:
