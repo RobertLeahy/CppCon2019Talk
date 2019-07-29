@@ -32,8 +32,7 @@ template<typename State,
 std::shared_ptr<State> allocate_state(Args&&... args) {
   using completion_handler_type = typename State::completion_handler_type;
   const auto& handler = detail::allocate_shared_find_completion_handler<completion_handler_type>(args...);
-  auto a = boost::asio::get_associated_allocator(handler,
-                                                 std::allocator<void>());
+  auto a = boost::asio::get_associated_allocator(handler);
   return std::allocate_shared<State>(a,
                                      std::forward<Args>(args)...);
 }

@@ -21,8 +21,7 @@ public:
   using completion_handler_type = CompletionHandler;
   using executor_type = boost::asio::associated_executor_t<CompletionHandler,
                                                            Executor>;
-  using allocator_type = boost::asio::associated_allocator_t<CompletionHandler,
-                                                             std::allocator<void>>;
+  using allocator_type = boost::asio::associated_allocator_t<CompletionHandler>;
   state_base() = delete;
   state_base(const state_base&) = delete;
   state_base& operator=(const state_base&) = delete;
@@ -36,8 +35,7 @@ public:
                                                 ex_);
   }
   auto get_allocator() const noexcept {
-    return boost::asio::get_associated_allocator(handler_,
-                                                 std::allocator<void>());
+    return boost::asio::get_associated_allocator(handler_);
   }
   template<typename Derived>
   bool complete(const std::shared_ptr<Derived>& p,

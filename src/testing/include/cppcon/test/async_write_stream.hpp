@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <limits>
-#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
@@ -72,8 +71,7 @@ public:
                                                                bytes_transferred);
                   out_ += bytes_transferred;
                   size_ -= bytes_transferred;
-                  auto a = boost::asio::get_associated_allocator(handler,
-                                                                 std::allocator<void>());
+                  auto a = boost::asio::get_associated_allocator(handler);
                   auto ex = g2.get_executor();
                   auto f = [g = std::move(g),
                             g2 = std::move(g2),

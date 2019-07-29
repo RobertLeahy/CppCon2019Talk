@@ -3,7 +3,6 @@
 #include <cassert>
 #include <chrono>
 #include <cstddef>
-#include <memory>
 #include <system_error>
 #include <utility>
 #include <boost/asio/ts/executor.hpp>
@@ -45,8 +44,7 @@ public:
                  g2 = boost::asio::make_work_guard(ex),
                  handler = std::move(completion.completion_handler)](std::error_code ec) mutable
                 {
-                  auto a = boost::asio::get_associated_allocator(handler,
-                                                                 std::allocator<void>());
+                  auto a = boost::asio::get_associated_allocator(handler);
                   auto ex = g2.get_executor();
                   auto f = [g = std::move(g),
                             g2 = std::move(g2),
