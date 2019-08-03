@@ -86,8 +86,8 @@ public:
   void initiate() {
     assert(curr_ != end_);
     AsyncAcceptor& acc = acc_;
-    auto ex = *curr_;
-    acc.async_accept(ex,
+    auto&& ctx = curr_->context();
+    acc.async_accept(ctx,
                      std::move(*this));
   }
   template<typename Stream>
