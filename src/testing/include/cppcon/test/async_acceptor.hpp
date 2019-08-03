@@ -5,6 +5,7 @@
 #include <optional>
 #include <stdexcept>
 #include <system_error>
+#include <type_traits>
 #include <utility>
 #include <boost/asio/ts/executor.hpp>
 #include "pending_service.hpp"
@@ -23,6 +24,7 @@ public:
   using executor_type = Executor;
   using stream_type = Stream;
   using stream_executor_type = decltype(std::declval<Stream&>().get_executor());
+  using stream_execution_context_type = std::decay_t<decltype(std::declval<stream_executor_type&>().context())>;
   async_acceptor() = delete;
   async_acceptor(const async_acceptor&) = delete;
   async_acceptor& operator=(const async_acceptor&) = delete;
@@ -75,6 +77,13 @@ public:
                 };
     stream_ex_.emplace(ex);
     return completion.result.get();
+  }
+  template<typename CompletionToken>
+  auto async_accept(stream_execution_context_type& ctx,
+                    CompletionToken&& token)
+  {
+    return async_accept(ctx.get_executor(),
+                        std::forward<CompletionToken>(token));
   }
   bool pending() const noexcept {
     return bool(*pending_);

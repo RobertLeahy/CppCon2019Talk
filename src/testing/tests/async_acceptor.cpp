@@ -208,6 +208,52 @@ TEST_CASE("Cancel",
   CHECK(b.stopped());
 }
 
+TEST_CASE("Accept on context",
+          "[async_acceptor]")
+{
+  std::error_code ec;
+  boost::asio::io_context a;
+  boost::asio::io_context b;
+  using stream_type = async_write_stream<boost::asio::io_context::executor_type>;
+  std::optional<stream_type> stream;
+  async_acceptor<boost::asio::io_context::executor_type,
+                 stream_type> acc(a.get_executor());
+  auto f = [&](auto e,
+               auto s)
+           {
+             if (stream) {
+               throw std::logic_error("Already invoked");
+             }
+             ec = e;
+             stream.emplace(std::move(s));
+           };
+  acc.async_accept(b,
+                   f);
+  CHECK_FALSE(stream);
+  REQUIRE(acc.pending());
+  CHECK(acc.get_stream_executor() == b.get_executor());
+  auto handlers = a.poll();
+  CHECK_FALSE(handlers);
+  CHECK_FALSE(a.stopped());
+  handlers = b.poll();
+  CHECK_FALSE(handlers);
+  CHECK(b.stopped());
+  b.restart();
+  acc.complete();
+  CHECK_FALSE(acc.pending());
+  CHECK_FALSE(stream);
+  handlers = a.poll();
+  CHECK(handlers == 1);
+  CHECK(a.stopped());
+  REQUIRE(stream);
+  CHECK_FALSE(ec);
+  CHECK(stream->get_executor() == b.get_executor());
+  CHECK_FALSE(stream->remaining());
+  handlers = b.poll();
+  CHECK_FALSE(handlers);
+  CHECK(b.stopped());
+}
+
 }
 }
 }
