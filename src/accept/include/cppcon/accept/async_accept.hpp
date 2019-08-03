@@ -12,36 +12,30 @@ namespace accept {
 
 namespace detail {
 
-template<typename AsyncAcceptor,
-         typename ForwardIterator,
-         typename AfterAccept,
-         typename CompletionHandler>
+template<class Acceptor,
+         class Iterator,
+         class AfterAccept,
+         class Handler>
 class async_accept_op {
-private:
-  static constexpr bool nothrow = std::is_nothrow_copy_constructible_v<ForwardIterator> &&
-                                  std::is_nothrow_move_constructible_v<AfterAccept>     &&
-                                  std::is_nothrow_move_constructible_v<CompletionHandler>;
-  AsyncAcceptor&        acc_;
-  const ForwardIterator begin_;
-  const ForwardIterator end_;
-  ForwardIterator       curr_;
-  AfterAccept           after_;
-  CompletionHandler     h_;
-  bool                  owns_work_;
-  template<typename Function>
-  void for_each(Function f) noexcept {
-    f(acc_.get_executor());
+  static constexpr bool nothrow = std::is_nothrow_copy_constructible_v<Iterator>    &&
+                                  std::is_nothrow_move_constructible_v<AfterAccept> &&
+                                  std::is_nothrow_move_constructible_v<Handler>;
+  Acceptor& acc_;
+  Iterator begin_, end_, curr_;
+  AfterAccept after_;
+  Handler h_;
+  bool owns_work_;
+  void release() noexcept {
+    assert(owns_work_);
     std::for_each(begin_,
                   end_,
-                  f);
-  }
-  void release() noexcept {
-    for_each([](auto ex) noexcept { ex.on_work_finished(); });
+                  [](auto ex) noexcept { ex.on_work_finished(); });
+    owns_work_ = false;
   }
 public:
-  using executor_type = boost::asio::associated_executor_t<CompletionHandler,
-                                                           decltype(std::declval<AsyncAcceptor&>().get_executor())>;
-  using allocator_type = boost::asio::associated_allocator_t<CompletionHandler>;
+  using executor_type = boost::asio::associated_executor_t<Handler,
+                                                           decltype(std::declval<Acceptor&>().get_executor())>;
+  using allocator_type = boost::asio::associated_allocator_t<Handler>;
   auto get_executor() const noexcept {
     return boost::asio::get_associated_executor(h_,
                                                 acc_.get_executor());
@@ -49,11 +43,11 @@ public:
   auto get_allocator() const noexcept {
     return boost::asio::get_associated_allocator(h_);
   }
-  async_accept_op(AsyncAcceptor& acc,
-                  ForwardIterator begin,
-                  ForwardIterator end,
+  async_accept_op(Acceptor& acc,
+                  Iterator begin,
+                  Iterator end,
                   AfterAccept after,
-                  CompletionHandler h) noexcept(nothrow)
+                  Handler h) noexcept(nothrow)
     : acc_      (acc),
       begin_    (begin),
       end_      (end),
@@ -64,7 +58,9 @@ public:
   {
     assert(begin_ != end_);
     assert(curr_ != end_);
-    for_each([](auto ex) noexcept { ex.on_work_started(); });
+    std::for_each(begin_,
+                  end_,
+                  [](auto ex) noexcept { ex.on_work_started(); });
   }
   async_accept_op(async_accept_op&& other) noexcept(nothrow)
     : acc_      (other.acc_),
@@ -85,12 +81,12 @@ public:
   }
   void initiate() {
     assert(curr_ != end_);
-    AsyncAcceptor& acc = acc_;
+    Acceptor& acc = acc_;
     auto&& ctx = curr_->context();
     acc.async_accept(ctx,
                      std::move(*this));
   }
-  template<typename Stream>
+  template<class Stream>
   void operator()(std::error_code ec,
                   Stream s)
   {
@@ -111,13 +107,13 @@ public:
 
 }
 
-template<typename AsyncAcceptor,
-         typename ForwardIterator,
-         typename AfterAccept,
-         typename CompletionToken>
-auto async_accept(AsyncAcceptor& acc,
-                  ForwardIterator begin,
-                  ForwardIterator end,
+template<class Acceptor,
+         class Iterator,
+         class AfterAccept,
+         class CompletionToken>
+auto async_accept(Acceptor& acc,
+                  Iterator begin,
+                  Iterator end,
                   AfterAccept after,
                   CompletionToken&& token)
 {
@@ -126,8 +122,8 @@ auto async_accept(AsyncAcceptor& acc,
   using completion_type = boost::asio::async_completion<CompletionToken,
                                                         signature_type>;
   completion_type completion(token);
-  using op_type = detail::async_accept_op<AsyncAcceptor,
-                                          ForwardIterator,
+  using op_type = detail::async_accept_op<Acceptor,
+                                          Iterator,
                                           AfterAccept,
                                           typename completion_type::completion_handler_type>;
   op_type o(acc,
