@@ -26,6 +26,13 @@ public:
   async_write_stream() = delete;
   async_write_stream(const async_write_stream&) = delete;
   async_write_stream& operator=(const async_write_stream&) = delete;
+  async_write_stream(async_write_stream&& other)
+    : async_write_stream(other.ex_,
+                         other.out_,
+                         other.size_)
+  {
+    assert(!other.pending());
+  }
   async_write_stream(const executor_type& ex,
                      std::byte* out,
                      std::size_t size) noexcept
