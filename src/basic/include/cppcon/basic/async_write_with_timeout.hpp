@@ -30,42 +30,42 @@ auto async_write_with_timeout(AsyncWriteStream& stream,
                                                         signature_type>;
   using handler_type = typename completion_type::completion_handler_type;
   using executor_type = decltype(stream.get_executor());
-  using state_base_type = state_base<executor_type,
-                                     handler_type>;
-  struct state : public state_base_type {
+  struct state : public state_base<executor_type,
+                                   handler_type>
+  {
     state(AsyncWriteStream& s,
           Timer&,
           handler_type h) noexcept(std::is_nothrow_move_constructible_v<handler_type>)
-      : state_base_type(s.get_executor(),
-                        std::move(h)),
+      : state_base<executor_type,
+                   handler_type>(s.get_executor(),
+                                 std::move(h)),
         stream         (s)
     {}
     AsyncWriteStream& stream;
     std::size_t       bytes_transferred = 0;
   };
-  using op_base_type = op_base<state>;
-  struct write_op : public op_base_type {
-    using op_base_type::op_base_type;
+  struct write_op : public op_base<state> {
+    using op_base<state>::op_base;
     void operator()(std::error_code ec,
                     std::size_t bytes_transferred)
     {
-      if (op_base_type::complete(ec)) {
-        op_base_type::upcall(bytes_transferred);
+      if (this->complete(ec)) {
+        this->upcall(bytes_transferred);
         return;
       }
-      op_base_type::state().bytes_transferred = bytes_transferred;
-      op_base_type::reset();
+      this->state().bytes_transferred = bytes_transferred;
+      this->reset();
     }
   };
-  struct timeout_op : public op_base_type {
-    using op_base_type::op_base_type;
+  struct timeout_op : public op_base<state> {
+    using op_base<state>::op_base;
     void operator()(std::error_code) {
-      if (op_base_type::complete(make_error_code(std::errc::timed_out))) {
-        auto bytes_transferred = op_base_type::state().bytes_transferred;
-        op_base_type::upcall(bytes_transferred);
+      if (this->complete(make_error_code(std::errc::timed_out))) {
+        auto bytes_transferred = this->state().bytes_transferred;
+        this->upcall(bytes_transferred);
         return;
       }
-      op_base_type::reset();
+      this->reset();
     }
   };
   completion_type completion(token);

@@ -34,9 +34,8 @@ public:
     }
     using signature_type = void(boost::system::error_code,
                                 std::size_t);
-    using completion_type = boost::asio::async_completion<Token,
-                                                          signature_type>;
-    completion_type completion(token);
+    boost::asio::async_completion<Token,
+                                  signature_type> completion(token);
     auto ex = boost::asio::get_associated_executor(completion.completion_handler,
                                                    get_executor());
     auto a = boost::asio::get_associated_allocator(completion.completion_handler);
