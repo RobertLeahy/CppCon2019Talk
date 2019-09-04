@@ -1,4 +1,5 @@
 add_subdirectory(accept)
+add_subdirectory(accept_all)
 add_subdirectory(accept_no_work)
 add_subdirectory(accept_one)
 add_subdirectory(basic)
