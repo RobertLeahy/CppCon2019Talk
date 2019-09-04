@@ -1,6 +1,8 @@
 add_subdirectory(accept)
 add_subdirectory(accept_no_work)
 add_subdirectory(basic)
+add_subdirectory(basic_no_bases)
 add_subdirectory(cancelable)
+add_subdirectory(cancelable_no_bases)
 add_subdirectory(testing)
 add_subdirectory(work)
