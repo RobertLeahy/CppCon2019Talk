@@ -69,13 +69,13 @@ auto async_write_with_timeout(AsyncWriteStream& stream,
         state_->ec = ec;
         state_->bytes_transferred = bytes_transferred;
         state_.reset();
-        return;
+      } else {
+        auto h = std::move(state_->handler);
+        ec = state_->ec;
+        state_.reset();
+        h(ec,
+          bytes_transferred);
       }
-      auto h = std::move(state_->handler);
-      ec = state_->ec;
-      state_.reset();
-      h(ec,
-        bytes_transferred);
     }
   };
   class timeout_op {
@@ -102,14 +102,14 @@ auto async_write_with_timeout(AsyncWriteStream& stream,
       if (--state_->outstanding) {
         state_->ec = make_error_code(std::errc::timed_out);
         state_.reset();
-        return;
+      } else {
+        auto h = std::move(state_->handler);
+        auto ec = state_->ec;
+        auto bytes_transferred = state_->bytes_transferred;
+        state_.reset();
+        h(ec,
+          bytes_transferred);
       }
-      auto h = std::move(state_->handler);
-      auto ec = state_->ec;
-      auto bytes_transferred = state_->bytes_transferred;
-      state_.reset();
-      h(ec,
-        bytes_transferred);
     }
   };
   completion_type completion(token);
